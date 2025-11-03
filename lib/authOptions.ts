@@ -6,7 +6,7 @@ export const authOptions = {
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      profile(profile) {
+      profile(profile:any) {
         return {
           id: profile.id,
           login: profile.login,
@@ -34,10 +34,11 @@ export const authOptions = {
         id: number;
         login: string;
         avatar_url: string;
+        email: string;
       };
 
       try {
-        const response = await fetch(`${process.env.BACKEND_URL}/user`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}user`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -47,6 +48,8 @@ export const authOptions = {
             username: githubProfile.login,
             avatarUrl: githubProfile.avatar_url,
             accessToken: account.access_token,
+            email: user.email,
+            name: user.name,
           }),
         });
 
