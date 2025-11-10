@@ -1,25 +1,19 @@
 import NextAuth, { User, Account, Profile } from "next-auth";
 import GitHub from "next-auth/providers/github";
 
-interface GitHubProfile {
-  id: number;
-  login: string;
-  avatar_url: string;
-  name: string | null;
-  email: string | null;
-}
-
 export const authOptions = {
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      profile(profile: GitHubProfile) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      profile(profile: any) {
         return {
-          id: String(profile.id),
+          id: profile.id,
+          login: profile.login,
+          avatar_url: profile.avatar_url,
           name: profile.name,
           email: profile.email,
-          image: profile.avatar_url,
         };
       },
     }),
@@ -37,7 +31,12 @@ export const authOptions = {
     }) {
       if (!account || !profile) return;
 
-      const githubProfile = profile as unknown as GitHubProfile;
+      const githubProfile = profile as {
+        id: number;
+        login: string;
+        avatar_url: string;
+        email: string;
+      };
 
       try {
         const response = await fetch(
