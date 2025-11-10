@@ -59,7 +59,7 @@ export default function Dashboard() {
         const email = session!.user!.email as string;
 
         const res = await axios.post(
-          process.env.NEXT_PUBLIC_BACKEND_URL + "dashboard",
+          process.env.NEXT_PUBLIC_BACKEND_URL + "check",
           { email }
         );
         const payload = res.data as {
