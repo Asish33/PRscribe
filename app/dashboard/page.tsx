@@ -45,70 +45,47 @@ export default function Dashboard() {
   const [prError, setPrError] = useState<string | null>(null);
   const [selectedPr, setSelectedPr] = useState<PullRequest | null>(null);
 
-  const checkInstallationStatus = async () => {
-    if (!session?.user) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      console.log(session);
-      const res = await axios.post(
-        process.env.NEXT_PUBLIC_BACKEND_URL + "check",
-        {
-          email: session?.user?.email,
-        }
-      );
-      const data: InstallationStatus = res.data;
-
-      setInstallationStatus(data);
-    } catch (err) {
-      console.error("Error checking installation status:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to check installation status"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      checkInstallationStatus();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session]);
+    if (status !== "authenticated" || !session?.user?.email) return;
 
-  const fetchPullRequests = async () => {
-    if (!session?.user?.email) return;
-    try {
-      setPrLoading(true);
-      setPrError(null);
-      const res = await axios.post(
-        process.env.NEXT_PUBLIC_BACKEND_URL + "getPr",
-        { email: session.user.email }
-      );
-      const payload = res.data as { prdata?: PullRequest[] };
-      setPrData(payload?.prdata || []);
-    } catch (err) {
-      setPrError(
-        err instanceof Error ? err.message : "Failed to load pull requests"
-      );
-    } finally {
-      setPrLoading(false);
-    }
-  };
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setPrLoading(true);
+        setError(null);
+        setPrError(null);
 
-  useEffect(() => {
-    if (
-      status === "authenticated" &&
-      session?.user?.email &&
-      installationStatus?.installed
-    ) {
-      fetchPullRequests();
-    }
-  }, [status, session?.user?.email, installationStatus?.installed]);
+        const email = session!.user!.email as string;
+
+        const res = await axios.post(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "dashboard",
+          { email }
+        );
+        const payload = res.data as {
+          installationStatus?: InstallationStatus;
+          prdata?: PullRequest[];
+        };
+        if (cancelled) return;
+        setInstallationStatus(payload?.installationStatus ?? null);
+        setPrData(payload?.prdata ?? []);
+      } catch (err) {
+        if (cancelled) return;
+        const message =
+          err instanceof Error ? err.message : "Failed to load dashboard data";
+        setError(message);
+        setPrError(message);
+      } finally {
+        if (cancelled) return;
+        setLoading(false);
+        setPrLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [status, session?.user?.email]);
 
   if (status === "loading") {
     return (
@@ -186,17 +163,6 @@ export default function Dashboard() {
       updated: counts.get(l)?.updated || 0,
     }));
   })();
-
-  useEffect(() => {
-    if (!selectedPr) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSelectedPr(null);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedPr]);
 
   return (
     <div className="min-h-screen w-full bg-black text-zinc-50">
