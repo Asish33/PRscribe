@@ -29,7 +29,10 @@ interface PullRequest {
   id?: string;
   pullRequestId?: number;
   title?: string;
-  body?: string;
+  summary?: string;
+  url:string;
+  reponame:string;
+  branches:string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -57,8 +60,6 @@ export default function Dashboard() {
         setPrError(null);
 
         const email = session!.user!.email as string;
-
-        // First: check installation status
         const res = await axios.post(
           process.env.NEXT_PUBLIC_BACKEND_URL + "check",
           { email }
@@ -356,12 +357,17 @@ export default function Dashboard() {
                           : ""}
                       </CardDescription>
                     </CardHeader>
-                    {pr.body ? (
-                      <CardContent>
-                        <p className="text-sm text-zinc-400 line-clamp-3 whitespace-pre-wrap">
-                          {pr.body}
-                        </p>
-                      </CardContent>
+                    {pr.summary ? (
+                      <div>
+                        <CardContent>
+                          <p className="text-sm text-zinc-400 line-clamp-3 whitespace-pre-wrap">
+                            {pr.summary}
+                          </p>
+                          <p className="text-sm text-zinc-400 line-clamp-3 whitespace-pre-wrap">
+                            {pr.url} {pr.reponame} {pr.branches}
+                          </p>
+                        </CardContent>
+                      </div>
                     ) : null}
                   </Card>
                 ))}
