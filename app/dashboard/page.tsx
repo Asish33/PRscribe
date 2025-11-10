@@ -58,25 +58,49 @@ export default function Dashboard() {
 
         const email = session!.user!.email as string;
 
+        // First: check installation status
         const res = await axios.post(
           process.env.NEXT_PUBLIC_BACKEND_URL + "check",
           { email }
         );
-        const payload = res.data as {
-          installationStatus?: InstallationStatus;
-          prdata?: PullRequest[];
-        };
         if (cancelled) return;
-        setInstallationStatus(payload?.installationStatus ?? null);
-        setPrData(payload?.prdata ?? []);
+        const statusPayload = res.data as
+          | InstallationStatus
+          | { installed: boolean };
+        const installed =
+          (statusPayload as InstallationStatus)?.installed ?? false;
+        setInstallationStatus({ installed });
+        setLoading(false);
+
+        if (installed) {
+          try {
+            const prRes = await axios.post(
+              process.env.NEXT_PUBLIC_BACKEND_URL + "getPr",
+              { email }
+            );
+            if (cancelled) return;
+            const prPayload = prRes.data as { prdata?: PullRequest[] };
+            setPrData(prPayload?.prdata ?? []);
+          } catch (e) {
+            if (cancelled) return;
+            const message =
+              e instanceof Error ? e.message : "Failed to load pull requests";
+            setPrError(message);
+            setPrData([]);
+          } finally {
+            if (cancelled) return;
+            setPrLoading(false);
+          }
+        } else {
+          setPrData([]);
+          setPrLoading(false);
+        }
       } catch (err) {
         if (cancelled) return;
         const message =
           err instanceof Error ? err.message : "Failed to load dashboard data";
         setError(message);
         setPrError(message);
-      } finally {
-        if (cancelled) return;
         setLoading(false);
         setPrLoading(false);
       }
