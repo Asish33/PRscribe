@@ -85,7 +85,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [status, session?.user?.email]);
+  }, [status, session]);
 
   if (status === "loading") {
     return (
@@ -102,7 +102,6 @@ export default function Dashboard() {
     return null;
   }
 
-  const user = session?.user;
   const installUrl = "https://github.com/apps/pr-managers";
 
   function getPrUrl(pr: PullRequest) {
@@ -164,6 +163,12 @@ export default function Dashboard() {
     }));
   })();
 
+  const formatDateTime = (value?: string | Date) => {
+    if (!value) return "-";
+    const d = value instanceof Date ? value : new Date(value);
+    return isNaN(d.getTime()) ? "-" : d.toLocaleString();
+  };
+
   return (
     <div className="min-h-screen w-full bg-black text-zinc-50">
       {/* subtle background */}
@@ -201,7 +206,7 @@ export default function Dashboard() {
                 <span className="text-2xl">🚀</span>
                 <div>
                   <p className="font-medium text-amber-400">
-                    You haven't installed the GitHub App yet
+                    You haven&apos;t installed the GitHub App yet
                   </p>
                   <p className="text-sm text-amber-400/70 mt-1">
                     Install the GitHub App to get started with repository
@@ -362,14 +367,8 @@ export default function Dashboard() {
                     {selectedPr.title || `PR #${selectedPr.pullRequestId}`}
                   </h2>
                   <p className="mt-1 text-xs text-zinc-500">
-                    Created:{" "}
-                    {selectedPr?.createdAt
-                      ? new Date(selectedPr.createdAt as any).toLocaleString()
-                      : "-"}{" "}
-                    • Updated:{" "}
-                    {selectedPr?.updatedAt
-                      ? new Date(selectedPr.updatedAt as any).toLocaleString()
-                      : "-"}
+                    Created: {formatDateTime(selectedPr?.createdAt)} • Updated:{" "}
+                    {formatDateTime(selectedPr?.updatedAt)}
                   </p>
                 </div>
                 <button
