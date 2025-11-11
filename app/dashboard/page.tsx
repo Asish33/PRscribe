@@ -408,10 +408,10 @@ export default function Dashboard() {
                   Close
                 </button>
               </div>
-              {selectedPr.body ? (
+              {selectedPr.summary ? (
                 <div className="max-h-[60vh] overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
                   <pre className="whitespace-pre-wrap wrap-break-word text-sm text-zinc-300">
-                    {selectedPr.body}
+                    {selectedPr.summary}
                   </pre>
                 </div>
               ) : (
