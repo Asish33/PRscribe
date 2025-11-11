@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,14 +13,13 @@ import {
 } from "@/components/ui/card";
 import {
   ResponsiveContainer,
-  LineChart,
   Line,
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   CartesianGrid,
 } from "recharts";
+import { ComposedChart, Area } from "recharts";
 
 interface InstallationStatus {
   installed: boolean;
@@ -30,9 +30,9 @@ interface PullRequest {
   pullRequestId?: number;
   title?: string;
   summary?: string;
-  url:string;
-  reponame:string;
-  branches:string;
+  url: string;
+  reponame: string;
+  branches: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -80,6 +80,7 @@ export default function Dashboard() {
               { email }
             );
             if (cancelled) return;
+            console.log("getPr response:", prRes.data);
             const prPayload = prRes.data as { prdata?: PullRequest[] };
             setPrData(prPayload?.prdata ?? []);
           } catch (e) {
@@ -130,10 +131,7 @@ export default function Dashboard() {
   const installUrl = "https://github.com/apps/pr-managers";
 
   function getPrUrl(pr: PullRequest) {
-    const id = pr.pullRequestId || pr.id;
-    return id
-      ? `https://github.com/your-org/your-repo/pull/${id}`
-      : `https://github.com/your-org/your-repo`;
+    return pr?.url || "#";
   }
 
   const chartData = (() => {
@@ -193,25 +191,96 @@ export default function Dashboard() {
     const d = value instanceof Date ? value : new Date(value);
     return isNaN(d.getTime()) ? "-" : d.toLocaleString();
   };
+  // Avoid duplicate tooltip entries when both Area and Line share the same dataKey
+  const tooltipFilter = (() => {
+    const seen = new Set<string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (item: any) => {
+      const key = item?.dataKey as string | undefined;
+      if (!key) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    };
+  })();
+
+  // Custom tooltip to avoid duplicate entries from Area + Line sharing dataKeys
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CustomTooltip = ({ active, label, payload }: any) => {
+    if (!active || !payload || payload.length === 0) return null;
+    const seen = new Set<string>();
+    const items: { name: string; value: number | string; color?: string }[] =
+      [];
+    for (const p of payload) {
+      const key = p?.dataKey as string | undefined;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const displayName = key === "created" ? "Created" : "Updated";
+      items.push({
+        name: displayName,
+        value: p?.value as number | string,
+        color:
+          (p?.color as string | undefined) || (p?.stroke as string | undefined),
+      });
+    }
+    return (
+      <div
+        style={{
+          background: "#0a0a0a",
+          border: "1px solid #27272a",
+          color: "#fafafa",
+          padding: "8px 10px",
+          borderRadius: 6,
+        }}
+      >
+        <div style={{ color: "#a1a1aa", marginBottom: 4, fontSize: 12 }}>
+          {label}
+        </div>
+        {items.map((it) => (
+          <div
+            key={it.name}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 12,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                background: it.color ?? "#8884d8",
+                borderRadius: 2,
+                display: "inline-block",
+              }}
+            />
+            <span style={{ color: "#fafafa" }}>{it.name}</span>
+            <span style={{ color: "#a1a1aa" }}>{it.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-black text-zinc-50">
       {/* subtle background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_-10%,rgba(120,119,198,0.15),transparent_60%)]" />
-      <div className="relative mx-auto max-w-4xl px-6 py-12">
+      <div className="relative mx-auto max-w-4xl px-6 py-10 md:py-12">
         {/* Header */}
         <div className="mb-10 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-zinc-100 to-zinc-400">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-zinc-100 to-zinc-400">
               Dashboard
             </h1>
-            <p className="mt-1 text-sm text-zinc-400">
-              Manage PRs at a glance.
+            <p className="mt-1 text-sm md:text-base text-zinc-400">
+              Manage pull requests across repositories at a glance.
             </p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="rounded-lg border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-sm font-medium transition-colors hover:border-zinc-700 hover:bg-zinc-800/80"
+            className="rounded-lg border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-sm font-medium transition-colors hover:border-zinc-700 hover:bg-zinc-800/80 shadow-sm"
           >
             Logout
           </button>
@@ -261,40 +330,105 @@ export default function Dashboard() {
         {installationStatus?.installed ? (
           <div className="mt-8 space-y-6">
             {prData && prData.length > 0 ? (
-              <Card className="border-zinc-800 bg-zinc-950/80 backdrop-blur">
+              <Card className="overflow-hidden border-zinc-800 bg-zinc-950/80 backdrop-blur shadow-lg">
+                <div className="h-1 w-full bg-linear-to-r from-cyan-500/40 via-fuchsia-400/30 to-transparent" />
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">
                     PR Activity (last 14 days)
                   </CardTitle>
                   <CardDescription>Created vs Updated</CardDescription>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-zinc-400">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-4 rounded-sm"
+                        style={{ background: "#22d3ee" }}
+                      />
+                      <span>Created</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-4 rounded-sm"
+                        style={{ background: "#a78bfa" }}
+                      />
+                      <span>Updated</span>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
+                      <ComposedChart
                         data={chartData}
                         margin={{ left: 8, right: 8, top: 8, bottom: 8 }}
                       >
+                        <defs>
+                          <linearGradient
+                            id="createdGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#22d3ee"
+                              stopOpacity="0.35"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#22d3ee"
+                              stopOpacity="0"
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id="updatedGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#a78bfa"
+                              stopOpacity="0.35"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#a78bfa"
+                              stopOpacity="0"
+                            />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                         <XAxis
                           dataKey="day"
                           tick={{ fill: "#a1a1aa", fontSize: 12 }}
                           stroke="#3f3f46"
+                          tickMargin={8}
                         />
                         <YAxis
                           allowDecimals={false}
                           tick={{ fill: "#a1a1aa", fontSize: 12 }}
                           stroke="#3f3f46"
                         />
-                        <Tooltip
-                          contentStyle={{
-                            background: "#0a0a0a",
-                            border: "1px solid #27272a",
-                            color: "#fafafa",
-                          }}
-                          labelStyle={{ color: "#a1a1aa" }}
+                        <Tooltip content={<CustomTooltip />} />
+                        {/* Legend handled manually above header to avoid duplicates */}
+                        <Area
+                          type="monotone"
+                          dataKey="created"
+                          fill="url(#createdGradient)"
+                          stroke="#22d3ee"
+                          strokeWidth={1.5}
+                          fillOpacity={1}
                         />
-                        <Legend wrapperStyle={{ color: "#a1a1aa" }} />
+                        <Area
+                          type="monotone"
+                          dataKey="updated"
+                          fill="url(#updatedGradient)"
+                          stroke="#a78bfa"
+                          strokeWidth={1.5}
+                          fillOpacity={1}
+                        />
                         <Line
                           type="monotone"
                           dataKey="created"
@@ -302,6 +436,7 @@ export default function Dashboard() {
                           stroke="#22d3ee"
                           strokeWidth={2}
                           dot={false}
+                          activeDot={{ r: 4 }}
                         />
                         <Line
                           type="monotone"
@@ -310,8 +445,9 @@ export default function Dashboard() {
                           stroke="#a78bfa"
                           strokeWidth={2}
                           dot={false}
+                          activeDot={{ r: 4 }}
                         />
-                      </LineChart>
+                      </ComposedChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
@@ -331,11 +467,11 @@ export default function Dashboard() {
                 <p className="text-sm mt-1">{prError}</p>
               </div>
             ) : prData && prData.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {prData.map((pr, idx) => (
                   <Card
                     key={(pr.id as string) || pr.pullRequestId || idx}
-                    className="border-zinc-800 bg-zinc-950/80 backdrop-blur transition-colors hover:border-zinc-700 cursor-pointer"
+                    className="group border-zinc-800 bg-zinc-950/80 backdrop-blur transition-all hover:border-zinc-700 hover:bg-zinc-900/80 cursor-pointer shadow-sm hover:shadow-md"
                     onClick={() => setSelectedPr(pr)}
                     role="button"
                     tabIndex={0}
@@ -346,8 +482,8 @@ export default function Dashboard() {
                       }
                     }}
                   >
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm text-zinc-200 line-clamp-1">
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-base md:text-lg text-zinc-100 line-clamp-1">
                         {pr.title || `PR #${pr.pullRequestId}`}
                       </CardTitle>
                       <CardDescription className="text-xs text-zinc-500">
@@ -357,18 +493,11 @@ export default function Dashboard() {
                           : ""}
                       </CardDescription>
                     </CardHeader>
-                    {pr.summary ? (
-                      <div>
-                        <CardContent>
-                          <p className="text-sm text-zinc-400 line-clamp-3 whitespace-pre-wrap">
-                            {pr.summary}
-                          </p>
-                          <p className="text-sm text-zinc-400 line-clamp-3 whitespace-pre-wrap">
-                            {pr.url} {pr.reponame} {pr.branches}
-                          </p>
-                        </CardContent>
+                    <CardContent>
+                      <div className="flex items-center justify-end">
+                        <ChevronRight className="h-4 w-4 text-zinc-500 transition-transform group-hover:translate-x-0.5" />
                       </div>
-                    ) : null}
+                    </CardContent>
                   </Card>
                 ))}
               </div>
@@ -387,13 +516,16 @@ export default function Dashboard() {
             role="dialog"
           >
             <div
-              className="absolute inset-0 bg-black/70"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setSelectedPr(null)}
             />
-            <div className="relative z-10 w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+            <div
+              className="relative z-10 w-full max-w-3xl rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-zinc-100">
+                  <h2 className="text-xl md:text-2xl font-semibold text-zinc-100">
                     {selectedPr.title || `PR #${selectedPr.pullRequestId}`}
                   </h2>
                   <p className="mt-1 text-xs text-zinc-500">
@@ -402,33 +534,71 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSelectedPr(null)}
                   className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800"
                 >
                   Close
                 </button>
               </div>
-              {selectedPr.summary ? (
-                <div className="max-h-[60vh] overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-                  <pre className="whitespace-pre-wrap wrap-break-word text-sm text-zinc-300">
-                    {selectedPr.summary}
-                  </pre>
+              <div className="space-y-3">
+                {selectedPr.summary ? (
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                    <p className="text-sm text-zinc-300 line-clamp-3 wrap-break-word">
+                      {selectedPr.summary}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-sm text-zinc-400">
+                    No description provided.
+                  </div>
+                )}
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-sm text-zinc-300">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500">Repo:</span>
+                      <span className="truncate">
+                        {selectedPr.reponame || "-"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500">Branch:</span>
+                      <span className="truncate">
+                        {selectedPr.branches || "-"}
+                      </span>
+                    </div>
+                    <div className="sm:col-span-2 flex items-start gap-2">
+                      <span className="text-zinc-500">URL:</span>
+                      {selectedPr.url ? (
+                        <a
+                          href={selectedPr.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline-offset-2 hover:underline truncate"
+                        >
+                          {selectedPr.url}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      ) : (
+                        <span className="text-zinc-400">-</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-sm text-zinc-400">
-                  No description provided.
-                </div>
-              )}
-              <div className="mt-4 flex justify-end">
-                <a
-                  href={getPrUrl(selectedPr)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800"
-                >
-                  View on GitHub
-                </a>
               </div>
+              {selectedPr.url ? (
+                <div className="mt-4 flex justify-end">
+                  <a
+                    href={getPrUrl(selectedPr)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800"
+                  >
+                    View on GitHub
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}
