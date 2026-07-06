@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
-import { motion } from "framer-motion";
 import LightRays from "@/components/LightRays";
-import { TruckElectric } from "lucide-react";
 
 export default function Home() {
   useEffect(() => {

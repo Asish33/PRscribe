@@ -191,20 +191,6 @@ export default function Dashboard() {
     const d = value instanceof Date ? value : new Date(value);
     return isNaN(d.getTime()) ? "-" : d.toLocaleString();
   };
-  // Avoid duplicate tooltip entries when both Area and Line share the same dataKey
-  const tooltipFilter = (() => {
-    const seen = new Set<string>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (item: any) => {
-      const key = item?.dataKey as string | undefined;
-      if (!key) return true;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    };
-  })();
-
-  // Custom tooltip to avoid duplicate entries from Area + Line sharing dataKeys
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomTooltip = ({ active, label, payload }: any) => {
     if (!active || !payload || payload.length === 0) return null;
