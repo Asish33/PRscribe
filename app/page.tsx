@@ -2,16 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
+import LightRays from "@/components/LightRays";
+import { TruckElectric } from "lucide-react";
 
 export default function Home() {
   useEffect(() => {
@@ -19,366 +13,212 @@ export default function Home() {
       document.querySelectorAll<HTMLElement>("[data-reveal]")
     );
     if (elements.length === 0) return;
-    const onIntersect: IntersectionObserverCallback = (entries, obs) => {
+    const onIntersect: IntersectionObserverCallback = (entries) => {
       for (const entry of entries) {
         const el = entry.target as HTMLElement;
         if (entry.isIntersecting) {
-          el.classList.add("opacity-100", "translate-y-0");
-          el.classList.remove("opacity-0", "translate-y-3");
-        } else {
-          // Reset when scrolled away so it can animate again on re-enter
-          el.classList.add("opacity-0", "translate-y-3");
-          el.classList.remove("opacity-100", "translate-y-0");
+          el.classList.add("is-visible");
         }
       }
     };
     const observer = new IntersectionObserver(onIntersect, {
-      threshold: 0.15,
+      threshold: 0.1,
       rootMargin: "0px 0px -5% 0px",
     });
-    elements.forEach((el, idx) => {
-      // Ensure initial hidden state so animations always play
-      el.classList.add("opacity-0", "translate-y-3");
-      el.style.transition = "opacity 500ms ease, transform 500ms ease";
-      el.style.transitionDelay = `${idx * 60}ms`;
-      observer.observe(el);
-    });
+    elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
   return (
-    <div className="min-h-screen bg-black text-zinc-100">
-      {/* Nav */}
-      <header className="sticky top-0 z-50 border-b border-zinc-800/60 bg-black/60 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-black text-zinc-100 selection:bg-blue-500/30">
+      <header className="absolute top-0 z-50 w-full bg-transparent">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-5">
+          {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center rounded-full bg-zinc-900/60 ring-1 ring-zinc-800 p-1.5 shadow-sm">
-              <Image
-                src="/globe.svg"
-                alt="PRscribe"
-                width={18}
-                height={18}
-                className="invert opacity-90"
-              />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">
+              <Image src="/globe.svg" alt="PRscribe" width={18} height={18} className="brightness-0" />
             </div>
-            <div className="leading-tight">
-              <div className="text-base md:text-lg font-semibold tracking-tight text-zinc-100">
-                PRscribe
-              </div>
-              <div className="text-[10px] md:text-xs text-zinc-500">
-                AI Summaries for GitHub PRs
-              </div>
-            </div>
+            <span className="text-xl font-medium tracking-tight text-white">PRscribe</span>
           </div>
-          <nav className="hidden items-center gap-6 text-sm text-zinc-400 md:flex">
-            <a
-              href="#features"
-              className="hover:text-zinc-200 transition-colors"
+
+         
+
+          {/* CTA */}
+          <div className="flex items-center">
+            <Link
+              href="/login"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-transparent px-5 text-sm font-medium text-white transition-colors hover:bg-white/5"
             >
-              Features
-            </a>
-            <a href="#how" className="hover:text-zinc-200 transition-colors">
-              How it works
-            </a>
-            <a
-              href="/dashboard"
-              className="hover:text-zinc-200 transition-colors"
-            >
-              Dashboard
-            </a>
-            <a href="/login" className="hover:text-zinc-200 transition-colors">
-              Sign in
-            </a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              asChild
-              className="h-9 border-zinc-800 bg-zinc-950 text-zinc-300 hover:bg-zinc-900 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
-            >
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button
-              asChild
-              className="h-9 bg-zinc-100 text-black hover:bg-white hover:shadow-[0_0_24px_rgba(167,139,250,0.25)]"
-            >
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
+              Get started
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(59,130,246,0.15)_0%,rgba(0,0,0,0)_60%)]" />
-        <div className="pointer-events-none absolute -left-32 top-10 -z-10 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 top-32 -z-10 h-72 w-72 rounded-full bg-fuchsia-500/10 blur-3xl" />
-        {/* floating icons for depth */}
-        <Image
-          src="/github.svg"
-          alt=""
-          width={48}
-          height={48}
-          className="pointer-events-none absolute left-10 top-24 -z-10 opacity-10 blur-[1px]"
-        />
-        <Image
-          src="/vercel.svg"
-          alt=""
-          width={48}
-          height={48}
-          className="pointer-events-none absolute right-16 top-10 -z-10 opacity-10 blur-[1px]"
-        />
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pb-20 pt-12 md:grid-cols-2 md:pt-16">
-          <div>
-            <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight md:text-5xl bg-clip-text text-transparent bg-linear-to-r from-zinc-100 via-zinc-200 to-zinc-400">
-              Turn noisy GitHub PRs into concise AI summaries
-            </h1>
-            <p className="mt-4 max-w-prose text-pretty text-zinc-400">
-              We ingest your GitHub webhooks, group related actions, generate
-              crisp AI insights, and email the right people so your team stays
-              aligned without the noise.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button
-                asChild
-                className="px-5 py-2.5 bg-zinc-100 text-black hover:bg-white shadow-sm hover:shadow-[0_0_28px_rgba(59,130,246,0.25)]"
-              >
-                <Link href="/login">Get started free</Link>
-              </Button>
-              <Button
-                variant="outline"
-                asChild
-                className="px-5 py-2.5 border-zinc-800 bg-zinc-950 text-zinc-300 hover:bg-zinc-900 hover:shadow-[0_0_28px_rgba(167,139,250,0.2)]"
-              >
-                <a href="#how">See how it works</a>
-              </Button>
-            </div>
+      <section className="relative flex min-h-[85vh] flex-col items-center justify-center overflow-hidden pb-32 pt-20">
+        
+        <div className="pointer-events-none absolute inset-0 z-0 h-[800px] w-full">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#8fc8f5"
+            raysSpeed={1.4}
+            lightSpread={1.1}
+            fadeDistance={1}
+            rayLength={2.5}
+            followMouse={true}
+            pulsating={false}
+            noiseAmount={0}
+            distortion={0}
+            saturation={1}
+            mouseInfluence={0.1}
+            className="opacity-100"
+          />
+        </div>
+        
+        <div className="relative z-10 mx-auto flex max-w-[900px] flex-col items-center text-center px-6 mt-16">
+          {/* Headline */}
+          <h1 className="text-balance text-5xl font-medium tracking-tight text-white sm:text-6xl md:text-[80px] md:leading-[1.1]">
+            AI-Powered Efficiency<br />for High Performers.
+          </h1>
+
+          {/* Subtext */}
+          <p className="mt-8 max-w-2xl text-pretty text-lg text-zinc-400 md:text-xl md:leading-relaxed">
+            Turn noisy GitHub PRs into concise AI summaries. PRscribe helps you take control of your code reviews with AI-driven insights. Say goodbye to distractions and unlock your full potential effortlessly.
+          </p>
+
+          {/* Actions */}
+          <div className="mt-10">
+            <Link
+              href="/login"
+              className="inline-flex h-14 items-center justify-center rounded-xl bg-[#2563eb] px-8 text-base font-medium text-white transition-colors hover:bg-blue-600 shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)]"
+            >
+              Try PRscribe for free
+            </Link>
           </div>
-          <div className="relative rounded-xl bg-zinc-950/60 p-4 shadow-2xl ring-1 ring-black/20">
-            <Card className="overflow-hidden bg-linear-to-b from-zinc-950 to-black shadow-xl backdrop-blur">
-              <div className="h-1 w-full bg-linear-to-r from-cyan-500/40 via-fuchsia-400/30 to-transparent animate-pulse" />
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2 text-xs text-zinc-400">
-                  <Badge
-                    variant="secondary"
-                    className="bg-zinc-900 text-zinc-300"
-                  >
-                    PR
-                  </Badge>
-                  <span className="inline-block translate-x-0 animate-pulse">
-                    →
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className="bg-zinc-900 text-zinc-300"
-                  >
-                    AI Insights
-                  </Badge>
-                  <span className="inline-block translate-x-0 animate-pulse">
-                    →
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className="bg-zinc-900 text-zinc-300"
-                  >
-                    Comment
-                  </Badge>
-                </div>
-                <CardTitle className="sr-only">Flow preview</CardTitle>
-                <CardDescription className="sr-only">
-                  Webhook to AI to automation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {/* Code diff animation */}
-                <div className="rounded-lg border border-zinc-800/40 bg-zinc-900/40 p-3 shadow-sm">
-                  <div className="font-mono text-[12px] leading-5">
-                    <div className="text-emerald-400/90">
-                      + feat(auth): add OAuth callback validation
-                    </div>
-                    <div
-                      className="text-emerald-400/90"
-                      style={{ animationDelay: "120ms" }}
-                    >
-                      &nbsp;&nbsp;+ ensure state param integrity
-                    </div>
-                    <div
-                      className="text-rose-400/90"
-                      style={{ animationDelay: "240ms" }}
-                    >
-                      - fix: remove redundant console logs
-                    </div>
-                    <div
-                      className="text-zinc-400/90"
-                      style={{ animationDelay: "360ms" }}
-                    >
-                      @@ packages/webhooks/handler.ts @@
-                    </div>
-                    <div
-                      className="text-zinc-300/90"
-                      style={{ animationDelay: "480ms" }}
-                    >
-                      const retries = 3 // retry on transient 5xx errors
-                    </div>
-                  </div>
-                </div>
-                {/* Animated arrow to summary */}
-                <div className="flex items-center justify-center text-zinc-500">
-                  <span className="animate-pulse">↓</span>
-                </div>
-                {/* AI summary with glow-on-hover */}
-                <div className="rounded-lg border border-zinc-800/40 bg-zinc-900/40 p-3 shadow-sm transition-shadow hover:shadow-[0_0_24px_rgba(59,130,246,0.15)]">
-                  <div className="mb-1 text-zinc-300">AI Insights</div>
-                  <div className="text-zinc-500">
-                    Auth flow hardened; webhook retry logic stabilized; comments
-                    auto-posted on affected PRs.
-                  </div>
-                </div>
-                {/* Comment automation */}
-                <div className="rounded-lg border border-zinc-800/40 bg-zinc-900/40 p-3 shadow-sm">
-                  <div className="mb-1 text-zinc-300">Automation</div>
-                  <div className="text-zinc-500">
-                    Posted insights comment to PR #128 • Assigned reviewers
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+
+          <p className="mt-12 text-sm font-medium text-zinc-500">
+            Trusted by 100+ businesses worldwide
+          </p>
+
+          {/* Trusted By Logos */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-8 opacity-40 grayscale md:gap-16">
+            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
+              <span className="h-6 w-6 rounded-full bg-white" /> Logoipsum
+            </div>
+            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
+              <span className="h-6 w-6 rounded bg-white" /> Logoipsum
+            </div>
+            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
+              <span className="h-6 w-6 rounded-full bg-white" /> Logoipsum
+            </div>
+            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
+              <span className="h-6 w-6 rounded-sm bg-white" /> Logoipsum
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section
-        id="features"
-        className="border-t border-zinc-800/60 bg-black py-16"
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 flex items-end justify-between">
-            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
-              Built for busy engineering teams
+      {/* ── FEATURES GRID ── */}
+      <section id="features" className="bg-black py-32">
+        <div className="mx-auto max-w-[1200px] px-6">
+          <div className="mb-20 text-center">
+            <h2 className="text-4xl font-medium tracking-tight text-white sm:text-5xl">
+              Make your workflow feel effortless
             </h2>
-            <span className="text-xs text-zinc-500">
-              Fast to set up • Private by default
-            </span>
+            <p className="mt-4 text-lg text-zinc-500">
+              Your productivity should feel calm, focused, and frictionless.
+            </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+
+          <div className="grid gap-6 md:grid-cols-3">
             <FeatureCard
-              title="GitHub-native"
-              desc="Listen to pushes, PRs, reviews, comments, releases and more via webhooks."
-              icon="/github.svg"
+              title="Instant Clarity"
+              desc="Start each day with a clear, AI-powered plan, no guesswork needed."
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              }
             />
             <FeatureCard
-              title="AI summaries"
-              desc="Generate crisp, context-aware updates using your repository signals."
-              icon="/next.svg"
+              title="Deep Focus"
+              desc="Block out the noise and stay in the zone longer with PRscribe's summaries."
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              }
             />
             <FeatureCard
-              title="Smart delivery"
-              desc="Automatically route updates to the right people via email."
-              icon="/vercel.svg"
+              title="Smart Priorities"
+              desc="Important updates are surfaced, so you don't have to think twice."
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+              }
             />
             <FeatureCard
-              title="Noise control"
-              desc="Deduplicate, group related events, and throttle bursts to reduce spam."
-              icon="/window.svg"
+              title="Effortless Planning"
+              desc="Plan your week with a clean, intelligent interface that keeps things simple."
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+              }
             />
             <FeatureCard
-              title="Secure"
-              desc="We only store what’s needed. Rotate secrets and configure scopes."
-              icon="/file.svg"
+              title="One Tool, Everything"
+              desc="Webhooks, PRs, and AI summaries — all in one seamless workflow."
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.954.954 0 0 0-.256.871c.084.383.336.7.703.882l1.636.818c.84.42 1.258 1.346.994 2.251-.265.905-1.121 1.488-2.073 1.409l-1.78-.148a.954.954 0 0 0-.967.662c-.104.37.009.771.285 1.026l1.247 1.14c.732.67 1.002 1.674.653 2.583-.349.91-1.284 1.464-2.26 1.345l-1.716-.21a.954.954 0 0 0-1.021.579c-.147.354-.055.76.233 1.028l1.378 1.272c.677.625.962 1.58.683 2.455-.278.875-1.155 1.442-2.115 1.365l-1.782-.143a.954.954 0 0 0-.973.655c-.106.37.004.772.278 1.03l1.218 1.15c.67.632.937 1.606.638 2.493-.298.887-1.217 1.44-2.176 1.311l-1.72-.232a.954.954 0 0 0-1.028.563c-.15.352-.06.758.225 1.029l1.378 1.31c.642.61.91 1.547.64 2.408-.27.86-1.12 1.433-2.062 1.39l-1.784-.08a.954.954 0 0 0-.979.643c-.109.367-.002.77.268 1.032l1.177 1.144c.64.622.887 1.564.595 2.428-.292.864-1.173 1.428-2.127 1.364l-1.719-.115a.954.954 0 0 0-.99.596c-.14.348-.052.748.222 1.01l1.378 1.321c.624.598.875 1.5.602 2.333-.274.832-1.127 1.378-2.046 1.311l-1.787-.13a.954.954 0 0 0-.996.611c-.12.355-.022.755.244 1.015l1.166 1.14c.626.612.863 1.517.576 2.36-.286.843-1.152 1.39-2.08 1.31l-1.73-.146A2.052 2.052 0 0 1 2 20.083V3.917C2 2.858 2.858 2 3.917 2h16.166c1.06 0 1.917.858 1.917 1.917v3.933Z"/></svg>
+              }
             />
             <FeatureCard
-              title="Simple setup"
-              desc="Connect GitHub, add a webhook URL, and you’re done in minutes."
-              icon="/globe.svg"
+              title="Visible Progress"
+              desc="Track real progress, not just activity, and finish each day with purpose."
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              }
             />
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section
-        id="how"
-        className="border-t border-zinc-800/60 bg-linear-to-b from-black to-zinc-950 py-16"
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
-            How it works
-          </h2>
-          <ol className="mt-8 grid gap-4 md:grid-cols-3">
-            <StepCard
-              step="1"
-              title="Connect your repos"
-              desc="Add our webhook URL to your GitHub org or repo settings."
-            />
-            <StepCard
-              step="2"
-              title="Tune your summaries"
-              desc="Pick rules, cadence, and audiences per repository."
-            />
-            <StepCard
-              step="3"
-              title="Ship with signal"
-              desc="We email timely AI summaries so everyone stays aligned."
-            />
-          </ol>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="border-t border-zinc-800/60 bg-zinc-950 py-16">
-        <div className="mx-auto max-w-6xl rounded-xl bg-linear-to-b from-zinc-950 to-black px-6 py-10 shadow-xl">
-          <div className="grid items-center gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="text-xl md:text-2xl font-semibold">
-                Less noise. More signal.
-              </h3>
-              <p className="mt-2 text-zinc-400">
-                Connect GitHub and start sending AI summaries in minutes.
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-white/5 bg-black py-20">
+        <div className="mx-auto max-w-[1200px] px-6">
+          <div className="grid gap-12 md:grid-cols-4">
+            {/* Brand */}
+            <div className="col-span-2 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white">
+                  <Image src="/globe.svg" alt="PRscribe" width={16} height={16} className="brightness-0" />
+                </div>
+                <span className="text-lg font-medium tracking-tight text-white">PRscribe</span>
+              </div>
+              <p className="max-w-xs text-sm leading-relaxed text-zinc-500">
+                Your AI-powered companion for effortless PR summaries.
               </p>
+              <div className="mt-auto pt-12 text-sm text-zinc-600">
+                Created by PRscribe team
+              </div>
             </div>
-            <div className="flex gap-3 md:justify-end">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-md bg-zinc-100 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-white shadow-sm"
-              >
-                Get started
-              </Link>
-              <a
-                href="#features"
-                className="inline-flex items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 px-5 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-900"
-              >
-                Explore features
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800/60 bg-black py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 text-xs text-zinc-500 md:flex-row">
-          <div className="flex items-center gap-2">
-            <div className="relative flex items-center justify-center rounded-full bg-zinc-900/60 ring-1 ring-zinc-800 p-1 shadow-sm">
-              <Image
-                src="/globe.svg"
-                alt="PRscribe"
-                width={12}
-                height={12}
-                className="invert opacity-90"
-              />
+            {/* Navigation */}
+            <div>
+              <h4 className="mb-6 font-medium text-white">Navigation</h4>
+              <div className="flex flex-col gap-4 text-sm text-zinc-400">
+                <a href="#features" className="hover:text-white">Features</a>
+                <a href="#how" className="hover:text-white">Benefits</a>
+                <a href="#testimonials" className="hover:text-white">Testimonials</a>
+                <a href="#pricing" className="hover:text-white">Pricing</a>
+                <a href="#faq" className="hover:text-white">FAQ</a>
+                <a href="/dashboard" className="hover:text-white">Dashboard</a>
+              </div>
             </div>
-            <span>© {new Date().getFullYear()} PRscribe</span>
-          </div>
-          <div className="flex gap-4">
-            <a href="/login" className="hover:text-zinc-300">
-              Sign in
-            </a>
-            <a href="/dashboard" className="hover:text-zinc-300">
-              Dashboard
-            </a>
-            <a href="#" className="hover:text-zinc-300">
-              Privacy
-            </a>
+
+            {/* Socials */}
+            <div>
+              <h4 className="mb-6 font-medium text-white">Socials</h4>
+              <div className="flex flex-col gap-4 text-sm text-zinc-400">
+                <a href="#" className="hover:text-white">Twitter (X)</a>
+                <a href="#" className="hover:text-white">Instagram</a>
+                <a href="#" className="hover:text-white">Facebook</a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
@@ -386,71 +226,24 @@ export default function Home() {
   );
 }
 
-function FeatureCard({
-  title,
-  desc,
-  icon,
-}: {
-  title: string;
-  desc: string;
-  icon?: string;
-}) {
+/* ─── Feature Card ─── */
+function FeatureCard({ title, desc, icon }: { title: string; desc: string; icon: React.ReactNode }) {
   return (
-    <Card
+    <div
       data-reveal
-      className="bg-zinc-950/50 backdrop-blur border border-zinc-800/40 shadow-sm hover:shadow-md transition-colors opacity-0 translate-y-3"
+      className="group relative flex flex-col gap-5 rounded-[24px] border border-white/5 bg-[#0a0a0a] p-8 transition-all duration-300 hover:bg-[#111] reveal-item"
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2 text-zinc-300">
-          {icon ? (
-            <Image
-              src={icon}
-              alt=""
-              width={16}
-              height={16}
-              className="opacity-80 invert"
-            />
-          ) : null}
-          <CardTitle className="text-sm">{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-sm text-zinc-500">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-300">
+        {icon}
+      </div>
+      <div>
+        <h3 className="mb-3 text-xl font-medium tracking-tight text-white">
+          {title}
+        </h3>
+        <p className="text-[15px] leading-relaxed text-zinc-500">
           {desc}
-        </CardDescription>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StepCard({
-  step,
-  title,
-  desc,
-}: {
-  step: string;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <Card
-      data-reveal
-      className="bg-zinc-950/50 backdrop-blur border border-zinc-800/40 shadow-sm opacity-0 translate-y-3"
-    >
-      <CardHeader className="pb-2">
-        <Badge
-          variant="outline"
-          className="border-zinc-800/40 bg-black text-zinc-400"
-        >
-          {step}
-        </Badge>
-        <CardTitle className="text-sm text-zinc-200">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-sm text-zinc-500">
-          {desc}
-        </CardDescription>
-      </CardContent>
-    </Card>
+        </p>
+      </div>
+    </div>
   );
 }
