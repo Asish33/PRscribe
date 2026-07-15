@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import LightRays from "@/components/LightRays";
+import Aurora from "@/components/Aurora";
 
 export default function Home() {
   useEffect(() => {
@@ -56,20 +57,11 @@ export default function Home() {
       <section className="relative flex min-h-[85vh] flex-col items-center justify-center overflow-hidden pb-32 pt-20">
         
         <div className="pointer-events-none absolute inset-0 z-0 h-[800px] w-full">
-          <LightRays
-            raysOrigin="top-center"
-            raysColor="#8fc8f5"
-            raysSpeed={1.4}
-            lightSpread={1.1}
-            fadeDistance={1}
-            rayLength={2.5}
-            followMouse={true}
-            pulsating={false}
-            noiseAmount={0}
-            distortion={0}
-            saturation={1}
-            mouseInfluence={0.1}
-            className="opacity-100"
+          <Aurora
+            colorStops={["#7cff67","#9267bb","#5227FF"]}
+            blend={0.5}
+            amplitude={2}
+            speed={1.5}
           />
         </div>
         
@@ -97,22 +89,6 @@ export default function Home() {
           <p className="mt-12 text-sm font-medium text-zinc-500">
             Trusted by 100+ businesses worldwide
           </p>
-
-          {/* Trusted By Logos */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-8 opacity-40 grayscale md:gap-16">
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
-              <span className="h-6 w-6 rounded-full bg-white" /> Logoipsum
-            </div>
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
-              <span className="h-6 w-6 rounded bg-white" /> Logoipsum
-            </div>
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
-              <span className="h-6 w-6 rounded-full bg-white" /> Logoipsum
-            </div>
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
-              <span className="h-6 w-6 rounded-sm bg-white" /> Logoipsum
-            </div>
-          </div>
         </div>
       </section>
 
